@@ -11,6 +11,12 @@ def lambda_handler(event, context):
         # Get the message from SQS
         message = json.loads(record['body'])
         transaction_id = message['transaction_id']
+
+        # Check if transaction_id is None or invalid
+        if not transaction_id:
+            print(f"Invalid transaction_id: {transaction_id}. Skipping this record.")
+            continue  # Skip processing this record
+            
         product_name = message['product_name']
         quantity = message['quantity']
         unit_price = message['unit_price']
