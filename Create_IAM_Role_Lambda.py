@@ -103,10 +103,10 @@ policy_document = {
 
 
 # Attach the custom policy to the role
-    iam_client.put_role_policy(
-        RoleName=role_name,
-        PolicyName="EcommerceTransactionPolicy",
-        PolicyDocument=json.dumps(policy_document)
-    )
-    print(f"Policy 'EcommerceTransactionPolicy' attached to role '{role_name}' successfully.")
+iam_client.put_role_policy(
+    RoleName=role_name,
+    PolicyName="EcommerceTransactionPolicy",
+    PolicyDocument=json.dumps(policy_document)
+)
+print(f"Policy 'EcommerceTransactionPolicy' attached to role '{role_name}' successfully.")
 
