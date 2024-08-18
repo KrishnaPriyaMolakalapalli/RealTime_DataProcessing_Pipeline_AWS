@@ -34,16 +34,79 @@ except Exception as e:
 # Attach necessary policies to the role
 # Grant permissions to access SQS, DynamoDB, SNS, and write logs to CloudWatch
 
-policy_arn_list = [
-    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",  # Allows Lambda to write to CloudWatch
-    "arn:aws:iam::aws:policy/AmazonSQSFullAccess",  # Allows access to SQS
-    "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",  # Allows access to DynamoDB
-    "arn:aws:iam::aws:policy/AmazonSNSFullAccess"  # Allows access to SNS
-]
+# Define the policy document with limited permissions
+policy_document = {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                # SQS permissions
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes"
+            ],
+            "Resource": "arn:aws:sqs:us-east-2:024848463817:EcommerceTransactionQueue"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                # Lambda permissions to be invoked by SQS
+                "lambda:InvokeFunction"
+            ],
+            "Resource": "arn:aws:lambda:us-east-2:024848463817:function:ProcessTransactionFunction"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                # SNS permissions to publish messages
+                "sns:Publish"
+            ],
+            "Resource": [
+                "arn:aws:sns:us-east-2:024848463817:TransactionNotifications",
+                "arn:aws:sns:us-east-2:024848463817:OrderRequestNotifications"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                # DynamoDB permissions for the Lambda function to write to the table
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": "arn:aws:dynamodb:us-east-2:024848463817:table/Transactions"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                # CloudWatch logs 
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "arn:aws:logs:*:*:*"
+        }, 
+        {
+          "Effect": "Allow",
+          "Action": [
+              # CloudWatch Alarms
+              "cloudwatch:PutMetricData",
+              "cloudwatch:PutMetricAlarm",
+              "cloudwatch:DeleteAlarms",
+              "cloudwatch:DescribeAlarms"
+          ]
+          "Resource": "*"
+        }
 
-for policy_arn in policy_arn_list:
-    iam_client.attach_role_policy(
+    ]
+}
+
+
+# Attach the custom policy to the role
+    iam_client.put_role_policy(
         RoleName=role_name,
-        PolicyArn=policy_arn
+        PolicyName="EcommerceTransactionPolicy",
+        PolicyDocument=json.dumps(policy_document)
     )
-    print(f"Attached policy {policy_arn} to role {role_name}.")
+    print(f"Policy 'EcommerceTransactionPolicy' attached to role '{role_name}' successfully.")
+
